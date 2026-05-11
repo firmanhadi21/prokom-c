@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antrian Poli Penyakit Dalam – RSUD Sejahtera</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🏥</span>
+      <div>
+        <div class="logo-title">RSUD Sejahtera</div>
+        <div class="logo-sub">Poli Penyakit Dalam</div>
+      </div>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</header>
+
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-view="home">🏠 Beranda</button>
+    <button class="nav-btn" data-view="book">📋 Daftar Antrian</button>
+    <button class="nav-btn" data-view="check">🔍 Cek Antrian</button>
+    <button class="nav-btn" data-view="schedule">📅 Jadwal Dokter</button>
+  </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+  <!-- VIEW: HOME -->
+  <section class="view active" id="view-home">
+    <div class="section-title">Selamat Datang</div>
+
+    <div class="cards-grid">
+      <div class="card card-primary">
+        <div class="card-label">Status Poli Hari Ini</div>
+        <div class="card-value" id="todayStatus">–</div>
+        <div class="card-sub" id="todayDate"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Sisa Kuota</div>
+        <div class="card-value" id="remainingQueue">–</div>
+        <div class="card-sub">dari <span id="maxQueueToday">–</span> kuota</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Dokter Tiba Pukul</div>
+        <div class="card-value" id="doctorArrivalHome">–</div>
+        <div class="card-sub" id="doctorNameHome">–</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Sudah Terdaftar</div>
+        <div class="card-value" id="registeredQueue">–</div>
+        <div class="card-sub">pasien hari ini</div>
+      </div>
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-label">Estimasi Waktu per Nomor Antrian (Hari Ini)</div>
+      <div id="queueTimeline" class="queue-timeline"></div>
+    </div>
+
+    <div class="action-section">
+      <button class="btn btn-primary btn-lg" onclick="navigate('book')">📋 Daftar Antrian Sekarang</button>
+      <button class="btn btn-outline btn-lg" onclick="navigate('check')">🔍 Cek Antrian Saya</button>
+    </div>
+  </section>
+
+  <!-- VIEW: BOOK -->
+  <section class="view" id="view-book">
+    <div class="section-title">Daftar Antrian</div>
+
+    <div class="card">
+      <form id="bookingForm" onsubmit="handleBookingSubmit(event)" novalidate>
+        <div class="form-group">
+          <label>Nama Lengkap <span class="required">*</span></label>
+          <input type="text" id="inputName" placeholder="Masukkan nama lengkap sesuai KTP"
+            required maxlength="100" autocomplete="name" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>NIK (KTP) <span class="required">*</span></label>
+            <input type="text" id="inputNik" placeholder="16 digit NIK"
+              required maxlength="16" inputmode="numeric" />
+          </div>
+          <div class="form-group">
+            <label>Nomor HP <span class="required">*</span></label>
+            <input type="tel" id="inputPhone" placeholder="08xxxxxxxxxx"
+              required maxlength="15" autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tanggal Kunjungan <span class="required">*</span></label>
+          <input type="date" id="inputDate" required />
+          <div class="form-hint" id="dateHint"></div>
+        </div>
+
+        <div class="alert alert-info" id="bookingPreview" style="display:none"></div>
+
+        <div class="form-group">
+          <label>Keluhan Utama</label>
+          <textarea id="inputComplaint" placeholder="Deskripsikan keluhan Anda secara singkat..."
+            rows="3" maxlength="500"></textarea>
+        </div>
+
+        <div class="alert alert-error" id="bookingError" style="display:none"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-full">Ambil Nomor Antrian</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- VIEW: CHECK -->
+  <section class="view" id="view-check">
+    <div class="section-title">Cek Antrian</div>
+
+    <div class="card">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Cari dengan ID Booking, NIK, atau Nomor HP</label>
+        <div class="search-row">
+          <input type="text" id="searchInput"
+            placeholder="Contoh: PDN-20260511-001  atau  08xxxxxxxxxx"
+            onkeydown="if(event.key==='Enter') handleSearch()" />
+          <button class="btn btn-primary" onclick="handleSearch()">Cari</button>
+        </div>
+      </div>
+      <div id="searchResult"></div>
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-label">Semua Antrian Hari Ini</div>
+      <div id="todayQueueList"></div>
+    </div>
+  </section>
+
+  <!-- VIEW: SCHEDULE -->
+  <section class="view" id="view-schedule">
+    <div class="section-title">Jadwal Dokter</div>
+
+    <div class="card">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Hari</th>
+            <th>Dokter</th>
+            <th>Dokter Tiba</th>
+            <th>Mulai Praktik</th>
+            <th>Selesai</th>
+            <th>Kuota</th>
+          </tr>
+        </thead>
+        <tbody id="scheduleTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-label">Informasi Penting</div>
+      <ul class="info-list">
+        <li>Pendaftaran antrian dibuka <strong>H-7 hingga hari-H</strong> (jika kuota masih tersedia).</li>
+        <li>Estimasi waktu dihitung berdasarkan rata-rata konsultasi <strong>10 menit per pasien</strong>.</li>
+        <li>Harap tiba <strong>15 menit sebelum</strong> estimasi waktu Anda dipanggil.</li>
+        <li>Antrian yang tidak hadir dalam <strong>30 menit setelah estimasi</strong> dianggap hangus.</li>
+        <li>1 NIK hanya dapat mendaftar <strong>1 antrian per tanggal</strong>.</li>
+        <li>Informasi & bantuan: <strong>0800-1234-5678</strong> (bebas pulsa).</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== MODAL: Konfirmasi Booking ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-success-icon">✓</div>
+      <h2>Antrian Berhasil Didaftarkan!</h2>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="printTicket()">🖨️ Cetak Tiket</button>
+      <button class="btn btn-primary" onclick="closeModal()">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- Area cetak (tersembunyi kecuali saat print) -->
+<div class="print-area" id="printArea"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
